@@ -37,10 +37,10 @@ public:
     type_(type), side_(side), price_(price), quantity_(quantity), id_(next_order_id_++) {}
 
   
-  OrderType GetType() { return type_; }
-  Side GetSide() { return side_; }
-  Quantity GetQuantity() { return quantity_; }
-  OrderID GetOrderID() { return id_; }
+  OrderType GetType() const { return type_; }
+  Side GetSide() const { return side_; }
+  Quantity GetQuantity() const { return quantity_; }
+  OrderID GetOrderID() const { return id_; }
     
   Price GetPrice() {
     if (!price_.has_value()) {

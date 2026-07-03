@@ -1,4 +1,5 @@
 #include "Order.hpp"
+#include "Orderbook.hpp"
 #include <iostream>
 
 int main() {
@@ -9,10 +10,11 @@ int main() {
             .Build();
   Order o2 = Order::Builder("", OrderType::Limit)
             .SetSide(Side::Sell)
-            .SetPrice(100)
+            .SetPrice(150)
             .SetQuantity(50)
             .Build();
   
-  std::cout << o.GetOrderID() << std::endl;
-  std::cout << o2.GetOrderID() << std::endl;
+  Orderbook book;
+  book.AddOrder(o);
+  book.AddOrder(o2);
 }
