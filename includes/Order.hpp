@@ -3,6 +3,11 @@
 
 #include <optional>
 #include <stdexcept>
+#include <string>
+
+using Price = unsigned;
+using Quantity = unsigned;
+using OrderID = unsigned long long;
 
 enum class Side { Buy, Sell };
 enum class OrderType { Market, Limit };
@@ -13,55 +18,31 @@ public:
   public:
     Builder(std::string symbol, OrderType type): symbol_(symbol), type_(type) {}
 
-    Builder& SetSide(Side side) {
-      side_ = side;
-      return *this;
-    }
+    Builder& SetSide(Side side); 
 
-    Builder& SetPrice(unsigned price) {
-      price_ = price;
-      return *this;
-    }
+    Builder& SetPrice(Price price); 
 
-    Builder& SetQuantity(unsigned quantity) {
-      quantity_ = quantity;
-      return *this;
-    }
+    Builder& SetQuantity(Quantity quantity); 
 
-    Order Build() const {
-      if (!quantity_.has_value()) {
-        throw std::logic_error("Quantity is required.");
-      }
-
-      if (!side_.has_value()) {
-        throw std::logic_error("Order side is required.");
-      }
-
-      if (type_ == OrderType::Market && price_.has_value()) {
-        throw std::logic_error("Market order cannot have a price.");
-      } else if (type_ == OrderType::Limit && !price_.has_value()) {
-        throw std::logic_error("Limit order needs a price."); 
-      }
-
-      return Order(type_, side_.value(), quantity_.value(), price_);
-    }
+    Order Build() const;
   private:
     std::string symbol_;
     OrderType type_;
     std::optional<Side> side_;
-    std::optional<unsigned> price_;
-    std::optional<unsigned> quantity_;
+    std::optional<Price> price_;
+    std::optional<Quantity> quantity_;
   };
 
-  Order(OrderType type, Side side, unsigned quantity, std::optional<unsigned> price = std::nullopt):
-    type_(type), side_(side), price_(price), quantity_(quantity) {}
+  Order(OrderType type, Side side, Quantity quantity, std::optional<Price> price = std::nullopt):
+    type_(type), side_(side), price_(price), quantity_(quantity), id_(next_order_id_++) {}
 
   
   OrderType GetType() { return type_; }
   Side GetSide() { return side_; }
-  unsigned GetQuantity() { return quantity_; }
+  Quantity GetQuantity() { return quantity_; }
+  OrderID GetOrderID() { return id_; }
     
-  unsigned GetPrice() {
+  Price GetPrice() {
     if (!price_.has_value()) {
       throw std::logic_error("Price does not exist for this market type or has not been set.");
     }
@@ -73,8 +54,10 @@ private:
   std::string symbol_;
   OrderType type_;
   Side side_;
-  std::optional<unsigned> price_;
-  unsigned quantity_;
+  std::optional<Price> price_;
+  Quantity quantity_;
+  const OrderID id_;
+  inline static OrderID next_order_id_ = 1;
 };
 
 #endif
