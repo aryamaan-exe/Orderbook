@@ -19,9 +19,7 @@ public:
     Builder(std::string symbol, OrderType type): symbol_(symbol), type_(type) {}
 
     Builder& SetSide(Side side); 
-
     Builder& SetPrice(Price price); 
-
     Builder& SetQuantity(Quantity quantity); 
 
     Order Build() const;
@@ -41,6 +39,8 @@ public:
   Side GetSide() const { return side_; }
   Quantity GetQuantity() const { return quantity_; }
   OrderID GetOrderID() const { return id_; }
+    
+  void ReduceQuantity(Quantity amount);
     
   Price GetPrice() {
     if (!price_.has_value()) {

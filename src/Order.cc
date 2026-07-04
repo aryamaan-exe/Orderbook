@@ -34,3 +34,11 @@ Order Builder::Build() const {
 
   return Order(type_, side_.value(), quantity_.value(), price_);
 }
+
+void Order::ReduceQuantity(Quantity amount) {
+  if (amount > quantity_) {
+    throw std::logic_error("Amount to be reduced cannot be greater than quantity.");
+  }
+
+  quantity_ -= amount;
+}

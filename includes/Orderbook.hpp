@@ -27,6 +27,9 @@ public:
 private:
   template <typename Book>
   void AddToBook(Book& book, const Order& order, Price price);
+  void MatchOrder(Order& order);
+  void MatchBuyLimit(Order& order);
+  void MatchSellLimit(Order& order);
 
   BidBook bids_;
   AskBook asks_;
