@@ -44,7 +44,7 @@ public:
     
   Price GetPrice() {
     if (!price_.has_value()) {
-      throw std::logic_error("Price does not exist for this market type or has not been set.");
+      throw std::logic_error("Price does not exist for this order type or has not been set.");
     }
     
     return price_.value();

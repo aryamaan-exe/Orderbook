@@ -28,8 +28,8 @@ private:
   template <typename Book>
   void AddToBook(Book& book, const Order& order, Price price);
   void MatchOrder(Order& order);
-  void MatchBuyLimit(Order& order);
-  void MatchSellLimit(Order& order);
+  template <typename Book, typename CrossPredicate>
+  void Match(Book& book, Order& order, CrossPredicate crosses);
 
   BidBook bids_;
   AskBook asks_;

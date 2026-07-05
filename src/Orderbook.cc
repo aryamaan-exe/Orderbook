@@ -14,10 +14,13 @@ void Orderbook::AddToBook(Book& book, const Order& order, Price price) {
 }
 
 void Orderbook::AddOrder(Order order) {
-  Price price = order.GetPrice();
   MatchOrder(order);
-
+  
   if (order.GetQuantity() == 0) return;
+  if (order.GetType() != OrderType::Limit) return;
+
+  Price price = order.GetPrice();
+
 
   if (order.GetSide() == Side::Buy) {
     AddToBook(bids_, order, price);
@@ -27,39 +30,20 @@ void Orderbook::AddOrder(Order order) {
 
 }
 
-void Orderbook::MatchBuyLimit(Order& order) {
-  while (order.GetQuantity() != 0 && !asks_.empty()) {
-    auto best_ask_level = asks_.begin();
+template <typename Book, typename CrossPredicate>
+void Orderbook::Match(Book& book, Order& order, CrossPredicate crosses) {
+  while (order.GetQuantity() != 0 && !book.empty()) {
+    auto level = book.begin();
 
-    if (best_ask_level->first > order.GetPrice()) break;
+    if (level == book.end() || !crosses(level->first)) break;
 
-    Order& best_ask = best_ask_level->second.front();
+    Order& resting = level->second.front();
+    Quantity amount = std::min(order.GetQuantity(), resting.GetQuantity());
 
-    Quantity amount = std::min(best_ask.GetQuantity(), order.GetQuantity());
     order.ReduceQuantity(amount);
-    best_ask.ReduceQuantity(amount);
+    resting.ReduceQuantity(amount);
 
-    if (best_ask.GetQuantity() == 0) {
-      CancelOrder(best_ask.GetOrderID());
-    }
-  }
-}
-
-void Orderbook::MatchSellLimit(Order& order) {
-  while (order.GetQuantity() != 0 && !bids_.empty()) {
-    auto best_bid_level = bids_.begin();
-
-    if (best_bid_level->first < order.GetPrice()) break;
-
-    Order& best_bid = best_bid_level->second.front();
-
-    Quantity amount = std::min(best_bid.GetQuantity(), order.GetQuantity());
-    order.ReduceQuantity(amount);
-    best_bid.ReduceQuantity(amount);
-
-    if (best_bid.GetQuantity() == 0) {
-      CancelOrder(best_bid.GetOrderID());
-    }
+    if (resting.GetQuantity() == 0) CancelOrder(resting.GetOrderID());
   }
 }
 
@@ -67,12 +51,26 @@ void Orderbook::MatchOrder(Order& order) {
   OrderType type = order.GetType();
 
   if (order.GetSide() == Side::Buy) {
-    if (type == OrderType::Limit) {
-      MatchBuyLimit(order);
+    switch (type) {
+      case OrderType::Limit:
+        Match(asks_, order, [&](Price p) { return p <= order.GetPrice(); });
+        break;
+      case OrderType::Market:
+        Match(asks_, order, [](Price) { return true; });
+        break;
+      default:
+        throw std::logic_error("Order type not implemented yet.");
     }
   } else {
-    if (type == OrderType::Limit) {
-      MatchSellLimit(order);
+    switch (type) {
+      case OrderType::Limit:
+        Match(bids_, order, [&](Price p) { return p <= order.GetPrice(); });
+        break;
+      case OrderType::Market:
+        Match(asks_, order, [](Price) { return true; });
+        break;
+      default:
+        throw std::logic_error("Order type not implemented yet.");
     }
   }
 }
@@ -89,7 +87,7 @@ bool Orderbook::CancelOrder(OrderID id) {
     auto price_it = bids_.find(location.price);
     if (price_it == bids_.end()) return false;
 
-    OrderList orders = price_it->second;
+    OrderList& orders = price_it->second;
     orders.erase(location.iterator);
     if (orders.empty()) bids_.erase(location.price);
 

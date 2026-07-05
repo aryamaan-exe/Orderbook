@@ -6,17 +6,16 @@ int main() {
   Order o = Order::Builder("", OrderType::Limit)
             .SetSide(Side::Sell)
             .SetPrice(100)
-            .SetQuantity(500)
-            .Build();
-  Order o2 = Order::Builder("", OrderType::Limit)
-            .SetSide(Side::Buy)
-            .SetPrice(105)
             .SetQuantity(510)
+            .Build();
+  Order o2 = Order::Builder("", OrderType::Market)
+            .SetSide(Side::Buy)
+            .SetQuantity(500)
             .Build();
   
   Orderbook book;
-  book.AddOrder(o2);
   book.AddOrder(o);
+  book.AddOrder(o2);
 
-  std::cout << book.GetBestBid().value().GetQuantity() << std::endl;
+  std::cout << book.GetBestAsk().value().GetQuantity() << std::endl;
 }
