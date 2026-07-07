@@ -1,26 +1,19 @@
-CXX=clang++
-INCLUDES=-Iincludes -Icatch2
-CXX_FLAGS=-std=c++26 -Wall -Wextra -Werror -pedantic $(INCLUDES)
+CXX_FLAGS := -std=c++26 -Wall -Wextra -Werror -pedantic -Iincludes -Icatch2
 
-SRC := $(wildcard src/*.cc)
-CATCH_SRC := catch2/catch_amalgamated.cpp
+SRC := $(filter-out src/main.cc, $(wildcard src/*.cc))
 OBJ := $(SRC:.cc=.o)
-TESTS := $(wildcard tests/*.cc)
+TEST_SRC := $(wildcard tests/*.cc)
+CATCH_SRC := catch2/catch_amalgamated.cpp
+CATCH_OBJ := catch2/catch_amalgamated.o
 
-bin/exec: $(OBJ)
-	$(CXX) $(OBJ) -o $@
-
-bin/tests: $(TESTS)
-	$(CXX) $(CXX_FLAGS) $(TESTS) $(CATCH_SRC) -o $@
-
-src/%.o: src/%.cc
+%.o: %.cc
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
-clean:
-	rm -f src/*.o bin/exec
+bin/exec: $(OBJ) src/main.o
+	$(CXX) $(OBJ) src/main.o -o $@
 
-exec: bin/exec
+bin/tests: $(OBJ) $(TEST_SRC) $(CATCH_OBJ)
+	$(CXX) $(CXX_FLAGS) $(OBJ) $(TEST_SRC) $(CATCH_OBJ) -o $@
 
+.PHONY: tests
 tests: bin/tests
-
-.PHONY: clean exec

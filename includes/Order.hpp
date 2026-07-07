@@ -31,8 +31,20 @@ public:
     std::optional<Quantity> quantity_;
   };
 
-  Order(OrderType type, Side side, Quantity quantity, std::optional<Price> price = std::nullopt):
-    type_(type), side_(side), price_(price), quantity_(quantity), id_(next_order_id_++) {}
+  Order(
+    std::string symbol,
+    OrderType type,
+    Side side,
+    Quantity quantity,
+    std::optional<Price>
+    price = std::nullopt
+  ): 
+    symbol_(symbol),
+    type_(type),
+    side_(side),
+    price_(price),
+    quantity_(quantity),
+    id_(next_order_id_++) {}
 
   
   OrderType GetType() const { return type_; }

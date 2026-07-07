@@ -64,10 +64,10 @@ void Orderbook::MatchOrder(Order& order) {
   } else {
     switch (type) {
       case OrderType::Limit:
-        Match(bids_, order, [&](Price p) { return p <= order.GetPrice(); });
+        Match(bids_, order, [&](Price p) { return p >= order.GetPrice(); });
         break;
       case OrderType::Market:
-        Match(asks_, order, [](Price) { return true; });
+        Match(bids_, order, [](Price) { return true; });
         break;
       default:
         throw std::logic_error("Order type not implemented yet.");
@@ -76,8 +76,6 @@ void Orderbook::MatchOrder(Order& order) {
 }
 
 bool Orderbook::CancelOrder(OrderID id) {
-  if (!order_locations_.contains(id)) { return false; }
-
   auto location_it = order_locations_.find(id);
   if (location_it == order_locations_.end()) return false;
  
@@ -95,7 +93,7 @@ bool Orderbook::CancelOrder(OrderID id) {
     auto price_it = asks_.find(location.price);
     if (price_it == asks_.end()) return false;
 
-    OrderList orders = price_it->second;
+    OrderList& orders = price_it->second;
     orders.erase(location.iterator);
     if (orders.empty()) asks_.erase(location.price);
   } 
