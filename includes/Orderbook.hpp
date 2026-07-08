@@ -29,7 +29,7 @@ private:
   void AddToBook(Book& book, const Order& order, Price price);
   void MatchOrder(Order& order);
   template <typename Book, typename CrossPredicate>
-  void Match(Book& book, Order& order, CrossPredicate crosses);
+  void Match(Book& book, Order& order, CrossPredicate crosses, bool match_fully = false);
 
   BidBook bids_;
   AskBook asks_;

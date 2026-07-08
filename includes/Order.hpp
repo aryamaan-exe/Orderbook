@@ -10,13 +10,13 @@ using Quantity = unsigned;
 using OrderID = unsigned long long;
 
 enum class Side { Buy, Sell };
-enum class OrderType { Market, Limit };
+enum class OrderType { Market, Limit, FillOrKill };
 
 class Order {
 public:
   class Builder {
   public:
-    Builder(std::string symbol, OrderType type): symbol_(symbol), type_(type) {}
+    Builder(OrderType type): type_(type) {}
 
     Builder& SetSide(Side side); 
     Builder& SetPrice(Price price); 
@@ -24,7 +24,6 @@ public:
 
     Order Build() const;
   private:
-    std::string symbol_;
     OrderType type_;
     std::optional<Side> side_;
     std::optional<Price> price_;
@@ -32,14 +31,12 @@ public:
   };
 
   Order(
-    std::string symbol,
     OrderType type,
     Side side,
     Quantity quantity,
     std::optional<Price>
     price = std::nullopt
   ): 
-    symbol_(symbol),
     type_(type),
     side_(side),
     price_(price),
@@ -63,7 +60,6 @@ public:
   }
   
 private:
-  std::string symbol_;
   OrderType type_;
   Side side_;
   std::optional<Price> price_;

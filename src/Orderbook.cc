@@ -31,14 +31,21 @@ void Orderbook::AddOrder(Order order) {
 }
 
 template <typename Book, typename CrossPredicate>
-void Orderbook::Match(Book& book, Order& order, CrossPredicate crosses) {
+void Orderbook::Match(
+  Book& book,
+  Order& order,
+  CrossPredicate crosses,
+  bool match_fully
+) {
   while (order.GetQuantity() != 0 && !book.empty()) {
     auto level = book.begin();
 
     if (level == book.end() || !crosses(level->first)) break;
 
     Order& resting = level->second.front();
-    Quantity amount = std::min(order.GetQuantity(), resting.GetQuantity());
+    Quantity order_quantity = order.GetQuantity();
+    Quantity amount = std::min(order_quantity, resting.GetQuantity());
+    if (match_fully && amount != order_quantity) return;
 
     order.ReduceQuantity(amount);
     resting.ReduceQuantity(amount);
@@ -49,11 +56,14 @@ void Orderbook::Match(Book& book, Order& order, CrossPredicate crosses) {
 
 void Orderbook::MatchOrder(Order& order) {
   OrderType type = order.GetType();
+  bool match_fully{};
 
   if (order.GetSide() == Side::Buy) {
     switch (type) {
+      case OrderType::FillOrKill:
+        match_fully = true;
       case OrderType::Limit:
-        Match(asks_, order, [&](Price p) { return p <= order.GetPrice(); });
+        Match(asks_, order, [&](Price p) { return p <= order.GetPrice(); }, match_fully);
         break;
       case OrderType::Market:
         Match(asks_, order, [](Price) { return true; });
@@ -63,8 +73,10 @@ void Orderbook::MatchOrder(Order& order) {
     }
   } else {
     switch (type) {
+      case OrderType::FillOrKill:
+        match_fully = true;
       case OrderType::Limit:
-        Match(bids_, order, [&](Price p) { return p >= order.GetPrice(); });
+        Match(bids_, order, [&](Price p) { return p >= order.GetPrice(); }, match_fully);
         break;
       case OrderType::Market:
         Match(bids_, order, [](Price) { return true; });

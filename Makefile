@@ -15,5 +15,6 @@ bin/exec: $(OBJ) src/main.o
 bin/tests: $(OBJ) $(TEST_SRC) $(CATCH_OBJ)
 	$(CXX) $(CXX_FLAGS) $(OBJ) $(TEST_SRC) $(CATCH_OBJ) -o $@
 
-.PHONY: tests
+.PHONY: tests exec
 tests: bin/tests
+exec: bin/exec
