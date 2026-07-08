@@ -19,6 +19,11 @@ TEST_CASE("Order builder", "[builder]") {
                                 .SetQuantity(50)
                                 .Build());
 
+  REQUIRE_THROWS(Order::Builder(OrderType::FillOrKill)
+                                .SetSide(Side::Buy)
+                                .SetQuantity(50)
+                                .Build());
+
   REQUIRE_THROWS(Order::Builder(OrderType::Market)
                                 .SetSide(Side::Buy)
                                 .SetQuantity(50)

@@ -30,6 +30,8 @@ Order Builder::Build() const {
     throw std::logic_error("Market order cannot have a price.");
   } else if (type_ == OrderType::Limit && !price_.has_value()) {
     throw std::logic_error("Limit order needs a price."); 
+  } else if (type_ == OrderType::FillOrKill && !price_.has_value()) {
+    throw std::logic_error("Fill or kill order needs a price."); 
   }
 
   return Order(type_, side_.value(), quantity_.value(), price_);
