@@ -1,5 +1,9 @@
 #include "Orderbook.hpp"
 
+Orderbook::Orderbook(std::string symbol): symbol_(symbol) {}
+
+Orderbook::Orderbook(): symbol_("") {}
+
 template <typename Book>
 void Orderbook::AddToBook(Book& book, const Order& order, Price price) {
   auto& orders = book[price];
@@ -117,11 +121,11 @@ bool Orderbook::CancelOrder(OrderID id) {
 std::optional<Order> Orderbook::GetBestBid() { 
   if (bids_.empty()) return std::nullopt;
 
-  return bids_.begin()->second.front();
+  return bids_.cbegin()->second.front();
 }
 
 std::optional<Order> Orderbook::GetBestAsk() { 
   if (asks_.empty()) return std::nullopt;
 
-  return asks_.begin()->second.front();
+  return asks_.cbegin()->second.front();
 }
