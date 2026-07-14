@@ -1,26 +1,47 @@
 #include "CommandHandler.hpp"
+#include "Command.hpp"
 
-void BackgroundHandler(MapPtr cmdmap) {
-    while (true) {
-      for (auto& [book, cmdlist] : *cmdmap) {
-        std::thread t{
-          [&]{
-            for (auto& command : cmdlist) {
-              command.Process();
-            }
-          }
-        };
-        t.detach();
-      }
-    }
+void CommandHandler::WorkerLoop(std::stop_token token, Worker& worker) {
+  std::stop_callback cb(token, [&worker] {
+    worker.cv.notify_all();
+  });
+  
+  while (true) {
+    std::unique_lock lock{worker.mutex};
+    worker.cv.wait(lock, [&] {
+      return !worker.queue.empty() || token.stop_requested();
+    });
+
+    if (worker.queue.empty() && token.stop_requested()) return;
+
+    Command cmd = worker.queue.front();
+    worker.queue.pop();
+    lock.unlock();
+    cmd.Process();
   }
-
-CommandHandler::CommandHandler() {
-  mapptr_ = std::make_shared<CommandMap>(commands_);
-  std::thread t{BackgroundHandler, mapptr_};
-  t.join();
 }
 
 void CommandHandler::AddCommand(Command command) {
-  commands_[command.GetOrderbook()].push_back(command);
+  BookPtr ptr{command.GetOrderbook()};
+  Worker& worker{workers_[ptr]};
+  
+  
+  std::lock_guard l{worker.mutex}; 
+  worker.queue.push(command);
+  if (!worker.thread.joinable()) {
+    worker.thread = std::jthread{[this, &worker](std::stop_token token) {
+      WorkerLoop(token, worker);
+    }};
+  }
+  worker.cv.notify_one();
+}
+
+void CommandHandler::Stop() {
+  for (auto& [_, worker] : workers_) {
+    worker.thread.request_stop();
+  } 
+
+  for (auto& [_, worker] : workers_) {
+    if (worker.thread.joinable()) worker.thread.join();
+  }
 }

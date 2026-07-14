@@ -1,4 +1,6 @@
 #include "catch_amalgamated.hpp"
+#include "Command.hpp"
+#include "CommandHandler.hpp"
 #include "Order.hpp"
 #include "Orderbook.hpp"
 
@@ -163,5 +165,52 @@ TEST_CASE("Matching engine - fill or kill", "[matchf]") {
   book2.AddOrder(o6);
 
   REQUIRE(book2.GetBestAsk() == std::nullopt);
+  REQUIRE(book2.GetBestBid() == std::nullopt);
+}
+
+TEST_CASE("Command processing and command handler", "[cmd]") {
+  Order o = Order::Builder(OrderType::Limit)
+            .SetSide(Side::Sell)
+            .SetPrice(500)
+            .SetQuantity(100)
+            .Build();
+
+  Order o2 = Order::Builder(OrderType::Limit)
+            .SetSide(Side::Buy)
+            .SetPrice(500)
+            .SetQuantity(75)
+            .Build();
+  
+  Order o3 = Order::Builder(OrderType::Limit)
+            .SetSide(Side::Sell)
+            .SetPrice(100)
+            .SetQuantity(100)
+            .Build();
+
+  Order o4 = Order::Builder(OrderType::Limit)
+            .SetSide(Side::Buy)
+            .SetPrice(100)
+            .SetQuantity(75)
+            .Build();
+
+  Orderbook book1{"a"};
+  Orderbook book2{"b"};
+  
+  Command c{CommandType::Add, book1, o};
+  Command c2{CommandType::Add, book1, o2};
+  Command c3{CommandType::Add, book2, o3};
+  Command c4{CommandType::Add, book2, o4};
+
+  CommandHandler cmdh;
+  cmdh.AddCommand(c);
+  cmdh.AddCommand(c2);
+  cmdh.AddCommand(c3);
+  cmdh.AddCommand(c4);
+
+  cmdh.Stop(); 
+
+  REQUIRE(book1.GetBestAsk().value().GetQuantity() == 25);
+  REQUIRE(book1.GetBestBid() == std::nullopt);
+  REQUIRE(book2.GetBestAsk().value().GetQuantity() == 25);
   REQUIRE(book2.GetBestBid() == std::nullopt);
 }

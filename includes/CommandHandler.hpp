@@ -4,19 +4,29 @@
 #include <unordered_map>
 #include <list>
 #include <thread>
+#include <queue>
+#include <mutex>
+#include <stop_token>
+#include <condition_variable>
 #include <memory>
 #include "Command.hpp"
 
-using CommandMap = std::unordered_map<Orderbook*, std::list<Command>>;
-using MapPtr = std::shared_ptr<CommandMap>;
+struct Worker {
+  std::jthread thread;
+  std::queue<Command> queue;
+  std::mutex mutex;
+  std::condition_variable cv;
+};
+
+using WorkerMap = std::unordered_map<BookPtr, Worker>;
 
 class CommandHandler {
 public:
-  CommandHandler();
   void AddCommand(Command command);
+  void Stop();
+  void WorkerLoop(std::stop_token token, Worker& worker);
 private:
-  CommandMap commands_;
-  MapPtr mapptr_;
+  WorkerMap workers_;
 };
 
 #endif
