@@ -6,7 +6,6 @@
 #include <thread>
 #include <queue>
 #include <mutex>
-#include <stop_token>
 #include <condition_variable>
 #include <memory>
 #include "Command.hpp"

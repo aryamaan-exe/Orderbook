@@ -214,3 +214,36 @@ TEST_CASE("Command processing and command handler", "[cmd]") {
   REQUIRE(book2.GetBestAsk().value().GetQuantity() == 25);
   REQUIRE(book2.GetBestBid() == std::nullopt);
 }
+
+bool CompareFiles(std::string filename1, std::string filename2) {
+  std::ifstream ifs1{filename1};
+  std::ifstream ifs2{filename2};
+  
+  if (!ifs1.is_open() || !ifs2.is_open()) return false;
+
+  std::ostringstream ss1, ss2;
+  ss1 << ifs1.rdbuf();
+  ss2 << ifs2.rdbuf();
+
+  return ss1.str() == ss2.str();
+}
+
+TEST_CASE("Writing trade logs", "[log]") {
+  Order o = Order::Builder(OrderType::Limit)
+            .SetSide(Side::Sell)
+            .SetPrice(100)
+            .SetQuantity(510)
+            .Build();
+  Order o2 = Order::Builder(OrderType::Limit)
+            .SetSide(Side::Buy)
+            .SetPrice(105)
+            .SetQuantity(500)
+            .Build();
+  
+  Orderbook book{"MyBook"};
+  book.AddOrder(o);
+  book.AddOrder(o2);
+  book.WriteOrders("testlog.txt");
+  
+  REQUIRE(CompareFiles("testlog.txt", "testlog_correct.txt"));
+}

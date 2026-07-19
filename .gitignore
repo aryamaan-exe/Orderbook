@@ -2,3 +2,4 @@ catch2/
 bin/
 src/*.o
 .DS_Store
+testlog.txt

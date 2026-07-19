@@ -1,5 +1,4 @@
 #include "CommandHandler.hpp"
-#include "Command.hpp"
 
 void CommandHandler::WorkerLoop(std::stop_token token, Worker& worker) {
   std::stop_callback cb(token, [&worker] {

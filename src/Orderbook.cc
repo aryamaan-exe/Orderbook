@@ -1,4 +1,6 @@
 #include "Orderbook.hpp"
+#include <fstream>
+#include <thread>
 
 Orderbook::Orderbook(std::string symbol): symbol_(symbol) {}
 
@@ -49,10 +51,16 @@ void Orderbook::Match(
     Order& resting = level->second.front();
     Quantity order_quantity = order.GetQuantity();
     Quantity amount = std::min(order_quantity, resting.GetQuantity());
-    if (match_fully && amount != order_quantity) return;
+    Price price{resting.GetPrice()};
 
+    if (amount != order_quantity && match_fully) return;
+    
     order.ReduceQuantity(amount);
     resting.ReduceQuantity(amount);
+    
+    log_.push_back(Trade{
+      order, resting, price, amount
+    });
 
     if (resting.GetQuantity() == 0) CancelOrder(resting.GetOrderID());
   }
@@ -128,4 +136,12 @@ std::optional<Order> Orderbook::GetBestAsk() {
   if (asks_.empty()) return std::nullopt;
 
   return asks_.cbegin()->second.front();
+}
+
+void Orderbook::WriteOrders(std::string filename) {
+  std::ofstream ofs{filename};
+  
+  for (const Trade& trade : log_) {
+    ofs << trade;
+  }
 }

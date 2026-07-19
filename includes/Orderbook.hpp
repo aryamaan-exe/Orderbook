@@ -2,16 +2,19 @@
 #define ORDERBOOK_HPP
 
 #include "Order.hpp"
+#include "Trade.hpp"
 #include <functional>
 #include <optional>
 #include <map>
 #include <list>
+#include <vector>
 
 using OrderList = std::list<Order>;
 using OrderIterator = OrderList::iterator;
 using BidBook = std::map<Price, OrderList, std::greater<Price>>;
 using AskBook = std::map<Price, OrderList>;
 using Symbol = std::string;
+using TradeLog = std::vector<Trade>;
 
 struct OrderLocation {
   Side side;
@@ -27,6 +30,7 @@ public:
   Orderbook(std::string symbol);
   void AddOrder(Order order);
   bool CancelOrder(OrderID id);
+  void WriteOrders(std::string filename);
   std::optional<Order> GetBestBid();
   std::optional<Order> GetBestAsk();
 private:
@@ -42,6 +46,7 @@ private:
   BidBook bids_;
   AskBook asks_;
   OrderMap order_locations_;
+  TradeLog log_;
 };
 
 #endif
